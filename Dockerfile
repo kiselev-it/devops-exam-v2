@@ -1,10 +1,8 @@
-FROM python:3
-# Set application working directory
-WORKDIR /usr/src/app
-# Install requirements
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-# Install application
-COPY app.py ./
-# Run application
-CMD python app.py
+FROM ubuntu:16.04
+RUN apt-get update -y
+RUN apt-get install -y python-pip python-dev build-essential
+COPY . /app
+WORKDIR /app
+RUN pip install -r requirements.txt
+ENTRYPOINT ["python"]
+CMD ["app.py"]
