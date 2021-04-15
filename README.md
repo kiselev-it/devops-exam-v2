@@ -55,14 +55,6 @@ az ad sp create-for-rbac --name "rc-az-action" --sdk-auth --role contributor --s
 ```
 Saved the resulting Json. It will need in the next step.
 
-Copy the resulting JSON response, and save it in a GitHub secret in your repository, as shown below:
-
-![JSON Response](https://github.com/marlinspike/flask-container-action/blob/master/img/JSON_Response.png)
-
-![GitHub Secret](https://github.com/marlinspike/flask-container-action/blob/master/img/create_secret.jpg)
-
-The **Demo** Resource Group is where I've created the Azure Container Repository.
-
 ## Step 5: Create GitHub Secrets
 GitHub Secrets (Settings > Secrets > New Repository secret):
 - "AZ_CREDS": JSON Response from step above
