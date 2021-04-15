@@ -70,7 +70,7 @@ env:
   IMAGE_NAME: flask-container-action
   IMAGE_TAG: latest
 
-#on:
+on:
   push:
     branches: [ main ]
   pull_request:
@@ -86,6 +86,14 @@ jobs:
         creds: ${{ secrets.AZ_CREDS }}
     
     - uses: actions/checkout@v2
+      with:
+          fetch-depth: 0
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       
     - name: Set up Python 3.6
       uses: actions/setup-python@v1
