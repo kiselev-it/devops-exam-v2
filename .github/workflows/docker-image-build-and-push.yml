@@ -4,7 +4,7 @@ env:
   IMAGE_NAME: flask-container-action
   IMAGE_TAG: latest
 
-#on:
+on:
   push:
     branches: [ main ]
   pull_request:
