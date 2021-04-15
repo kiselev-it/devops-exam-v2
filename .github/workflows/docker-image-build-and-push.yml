@@ -20,12 +20,18 @@ jobs:
         creds: ${{ secrets.AZ_CREDS }}
     
     - uses: actions/checkout@v2
-    #- name: Build the Docker image
-      #run: docker build . --file Dockerfile --tag '${{ IMAGE_NAME }}:latest'
       
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+          python-version: "3.6"
+          
+    - name: Run unit tests
+      run: python test_application.py
+    
     - uses: azure/docker-login@v1
       with:
-        login-server: rcdemocontainerreg.azurecr.io # default: index.docker.io
+        login-server: rcdemocontainerreg.azurecr.io 
         username: ${{ secrets.REGISTRY_USERNAME }}
         password: ${{ secrets.REGISTRY_PASSWORD }}
     - run:
