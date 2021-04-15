@@ -1,4 +1,4 @@
-#GitHub Actions deploy Flask to Azure Container Registry and Azure Container Instances
+# GitHub Actions deploy Flask to Azure Container Registry and Azure Container Instances
 
 Status of Last Deployment:<br>
 
@@ -36,7 +36,6 @@ with app.test_client() as c:
     assert response.status_code == 200
 ```
 ## Step 3: Create a Dockerfile
-The Dockerfile work for on Ubuntu.
 Dockerfile
 ```sh
 FROM ubuntu:16.04
@@ -54,10 +53,7 @@ Used this comand in the Azure portal from the Cloud Shell (Bash).
 ```sh
 az ad sp create-for-rbac --name "rc-az-action" --sdk-auth --role contributor --scopes /subscriptions/xxx-xxx-xxx-xxx-xxx/resourceGroups/Demo
 ```
-
-`az ad sp create-for-rbac --name "rc-az-action" --sdk-auth --role contributor --scopes /subscriptions/xxx-xxx-xxx-xxx-xxx/resourceGroups/Demo`
-
-Here, the **create-for-rbac** command is used to create a Service Principal called rc-az-action, and it's granted **contributor** rights on the scope of the **Demo** Resource Group in the subscription specified. Replace the "xxx.." with your actual subscription id.
+Saved the resulting Json. It will need in the next step.
 
 Copy the resulting JSON response, and save it in a GitHub secret in your repository, as shown below:
 
@@ -67,11 +63,70 @@ Copy the resulting JSON response, and save it in a GitHub secret in your reposit
 
 The **Demo** Resource Group is where I've created the Azure Container Repository.
 
-## Step 6: Create GitHub Secrets
-GitHub Secrets to create:
-- "AZ_CREDS": JSON Response from step Above
+## Step 5: Create GitHub Secrets
+GitHub Secrets (Settings > Secrets > New Repository secret):
+- "AZ_CREDS": JSON Response from step above
 - "REGISTRY_PASSWORD": The Password for the Azure Container Registry
 - "REGISTRY_USERNAME": The Username for the Azure Container Registry
 
-## Step 7: Create the GitHub Action YAML Script
-The script supplied in the workflows folder should work if you've followed the directions accurately.
+## Step 6: Create the GitHub Action YAML Script
+The YAML script created in the /workflow folder. 
+```sh
+name: Docker-Image-CI/CD
+
+env:
+  IMAGE_NAME: flask-container-action
+  IMAGE_TAG: latest
+
+#on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-16.04
+    steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZ_CREDS }}
+    
+    - uses: actions/checkout@v2
+      
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+          python-version: "3.6"
+          
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+          
+    - name: Run unit tests
+      run: python test_application.py
+    
+    - uses: azure/docker-login@v1
+      with:
+        login-server: rcdemocontainerreg.azurecr.io 
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    - run:
+        docker build . -t rcdemocontainerreg.azurecr.io/rcapps/flask-container-action:latest
+    - run:
+        docker push rcdemocontainerreg.azurecr.io/rcapps/flask-container-action:latest
+
+    - name: 'Deploy to Azure Container Instances'
+      uses: 'azure/aci-deploy@v1'
+      with:
+        resource-group: Demo
+        dns-name-label: flaskdemo
+        image: rcdemocontainerreg.azurecr.io/rcapps/flask-container-action:latest
+        registry-login-server: rcdemocontainerreg.azurecr.io
+        registry-username: ${{ secrets.REGISTRY_USERNAME }}
+        registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+        name: democi
+        location: 'east us'
+```
