@@ -13,7 +13,7 @@ This demo shows how to build a Docker container from a Python Flask app, push it
 - Enabled the Admin User Login/Password in the Azure Container Registry
 
 ## Step 1: Create a simple Flask app
-
+app.py
 ```sh
 from flask import Flask
 
@@ -26,26 +26,34 @@ def hello():
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=80)
 ```
+## Step 2: Create a simple Unit test
+test_application.py 
+```sh
+from app import app
+with app.test_client() as c:
+    response = c.get('/')
+    assert response.data == b'Hello World!'
+    assert response.status_code == 200
+```
+## Step 3: Create a Dockerfile
+The Dockerfile work for on Ubuntu.
+Dockerfile
+```sh
+FROM ubuntu:16.04
+RUN apt-get update -y
+RUN apt-get install -y python-pip python-dev build-essential
+COPY . /app
+WORKDIR /app
+RUN pip install -r requirements.txt
+ENTRYPOINT ["python"]
+CMD ["app.py"]
+```
 
-## Step 2: Create a Dockerfile
-The Dockerfile supplied will work for any Flask app on Ubuntu
-
-## Step 3: Build a Docker image
-This is optional, but a useful step on a Developer machine, to verify that your Docker image will build properly.
-
-`docker build -t flask-container-action:latest .`
-
-Here, the image is called **flask-container-action**, and it's tagged as **latest**.
-
-## Step 4: Run the container
-This is optional, but a useful step on a Developer machine, to verify that your Docker image will run properly.
-
-`Docker run -p 80:80 flask-container-action`
-
-Here, the local port 80 is mapped to a container port 80.
-
-## Step 5: Create a Service Principal in Azure for your GitHub Action to use
-You can do this on your own machine if you have Azure CLI installed, or simply in the portal from the Cloud Shell (Bash).
+## Step 4: Create a Service Principal in Azure
+Used this comand in the Azure portal from the Cloud Shell (Bash).
+```sh
+az ad sp create-for-rbac --name "rc-az-action" --sdk-auth --role contributor --scopes /subscriptions/xxx-xxx-xxx-xxx-xxx/resourceGroups/Demo
+```
 
 `az ad sp create-for-rbac --name "rc-az-action" --sdk-auth --role contributor --scopes /subscriptions/xxx-xxx-xxx-xxx-xxx/resourceGroups/Demo`
 
